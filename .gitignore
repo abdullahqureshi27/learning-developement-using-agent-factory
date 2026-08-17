@@ -1,0 +1,19 @@
+# ─── Environment files ───────────────────────────────────────────────
+# Never commit real secrets. Copy .env.example -> .env and fill in values.
+.env
+.env.*
+!.env.example
+
+# ─── Python ──────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+
+# ─── Node / Next.js ──────────────────────────────────────────────────
+node_modules/
+.next/
+out/
