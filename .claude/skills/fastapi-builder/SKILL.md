@@ -28,6 +28,13 @@ Build production-ready FastAPI applications from simple prototypes to enterprise
 - Provide database migration tooling beyond basic Alembic setup
 - Generate production monitoring/observability stack (Prometheus, Grafana, etc.)
 
+## When To Use Each Auth Pattern
+
+| Pattern | When to use | Stack |
+|---------|-------------|-------|
+| **Self-contained** | Simple apps, FastAPI-only backend, mobile apps | FastAPI + PyJWT + pwdlib |
+| **Split-auth / JWKS** | Next.js frontend, third-party auth (Better Auth, Clerk, Auth0) | FastAPI + PyJWT + PyJWKClient |
+
 ---
 
 ## Before Implementation
@@ -456,9 +463,9 @@ Phase 3: Database Integration (if needed)
   → Add CRUD operations
 
 Phase 4: Authentication (if needed)
-  → Set up JWT token generation
-  → Implement OAuth2PasswordBearer
-  → Create authentication dependencies
+  → Choose pattern: self-contained (FastAPI login + issues JWTs) or split-auth (frontend issues, FastAPI verifies via JWKS)
+  → Set up JWT token generation (self-contained) or JWKS verification (split-auth)
+  → Implement OAuth2PasswordBearer and dependencies
   → Add protected endpoints
 
 Phase 5: Testing
@@ -491,6 +498,19 @@ Is the operation I/O-bound? (DB, API, file)
   └─ NO → Is it CPU-intensive computation?
       ├─ YES → Use def (runs in threadpool)
       └─ NO → Use async def (default)
+```
+
+#### Which Auth Pattern?
+
+```
+Who issues the JWTs?
+  ├─ FastAPI itself (user/pass login, signup) → Self-contained auth
+  │   Use: OAuth2PasswordBearer, pwdlib[argon2], self-signed JWTs
+  │   See: "Authentication (JWT)" section below
+  │
+  └─ Frontend (Next.js + Better Auth, Clerk, etc.) → Split-auth / token verification
+      Use: PyJWKClient to fetch public keys from JWKS endpoint
+      See: "Split-Auth Pattern" section below
 ```
 
 #### How to Structure Dependencies?
@@ -665,7 +685,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
+import jwt
 from pwdlib import PasswordHash
 from pwdlib.hashers.argon2 import Argon2Hasher
 from pydantic import ConfigDict
@@ -690,7 +710,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     try:
@@ -698,13 +718,58 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         username: str = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError:
+    except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
     # Fetch user from database
     return user
 ```
 
 See `references/authentication.md` for complete implementation, scopes, and refresh tokens.
+
+---
+
+### Split-Auth Pattern: Next.js + Better Auth → FastAPI
+
+When a frontend framework (Next.js, etc.) handles login via Better Auth, FastAPI only verifies the incoming JWTs — it never sees passwords.
+
+```
+Browser → Next.js + Better Auth (login, issues EdDSA JWTs)
+                │
+                │   Authorization: Bearer <JWT>
+                ▼
+            FastAPI (verifies via JWKS, trusts claims)
+```
+
+**Why this pattern**: Better Auth handles sessions, MFA, social logins. FastAPI stays stateless — just validate the token and trust the claims.
+
+```python
+from jwt import PyJWKClient
+
+JWKS_URL = "http://localhost:3000/api/auth/jwks"   # Better Auth JWKS endpoint
+jwks_client = PyJWKClient(JWKS_URL)
+
+async def verify_better_auth_token(token: str) -> dict:
+    """Verify a JWT issued by Better Auth (EdDSA, JWKS)."""
+    try:
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+        payload = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=["EdDSA"],
+            audience="http://localhost:3000",
+            options={"verify_exp": True},
+        )
+        return payload
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+BetterAuthDep = Annotated[dict, Depends(verify_better_auth_token)]
+
+@app.get("/me")
+async def read_user_me(payload: BetterAuthDep):
+    # payload contains claims: sub, email, role, etc.
+    return {"user_id": payload["sub"], "email": payload.get("email")}
+```
 
 ---
 
@@ -760,7 +825,7 @@ See `references/testing.md` for authentication testing, fixtures, and coverage.
 - [ ] Use environment variables for secrets (never hardcode)
 - [ ] Enable HTTPS redirect middleware
 - [ ] Configure CORS with explicit origins (not `["*"]`)
-- [ ] Hash passwords with pwdlib[argon2]
+- [ ] Hash passwords with pwdlib[argon2] (self-contained) OR verify via JWKS (split-auth)
 - [ ] Validate all inputs: EmailStr for emails, Literal for enum-like fields, Field(min/max) for strings/numbers
 - [ ] Use response_model to prevent data leaks
 - [ ] Implement rate limiting via `utils/rate_limit.py` (auth: 5/min, signup: 10/hr, writes: 30/min, reads: 60/min)
@@ -856,6 +921,7 @@ Before marking implementation complete:
 - [ ] Response models excluding sensitive data
 - [ ] Database operations commit/rollback correctly
 - [ ] Authentication protecting required endpoints
+- [ ] If split-auth: JWKS endpoint reachable, token verification working
 
 ### Code Quality
 - [ ] Type hints on all functions
@@ -899,7 +965,8 @@ Before marking implementation complete:
 | Need | See |
 |------|-----|
 | Project structures | `references/project-structure.md` |
-| JWT authentication patterns | `references/authentication.md` |
+| Self-contained JWT auth (FastAPI login) | `references/authentication.md` |
+| Split-auth / JWKS verification (Better Auth, Clerk) | SKILL.md "Split-Auth Pattern" section above |
 | PostgreSQL + SQLModel setup | `references/database.md` |
 | Pytest testing examples | `references/testing.md` |
 | Docker deployment | `references/deployment.md` |

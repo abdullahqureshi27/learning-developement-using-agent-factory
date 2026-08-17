@@ -23,6 +23,9 @@ async def get_connection(app: FastAPI):
 # app = FastAPI()
 app = FastAPI(lifespan=get_connection)
 
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
 app.include_router(auth_router)
 app.include_router(student_router)
 app.include_router(student_public_router)

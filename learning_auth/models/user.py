@@ -53,6 +53,7 @@
 # models/user.py
 from datetime import datetime
 from typing import Annotated, Optional
+import uuid
 
 from pydantic import EmailStr
 from sqlmodel import Field, SQLModel
@@ -68,15 +69,20 @@ class UserBase(SQLModel):
     # is_verified: bool = Field(default=False)
     # role: str = Field(default="user", max_length=50)   # We will turn this into Enum later
 
-    
+class UserCreate(UserBase):
+    email: EmailStr
+    password: str
+    name: Optional[str] = None
+
 
 class User(UserBase,table=True):
     __tablename__ = "user"
     email: EmailStr = Field(index=True, unique=True, max_length=255)
     name: Optional[str] = Field(default=None, max_length=255)
     # id: Optional[int] = Field(default=None, primary_key=True)
-    id: Optional[str] = Field(default=None, primary_key=True)
-    # hashed_password: str = Field(min_length=60, max_length=500)
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()),primary_key=True,
+        nullable=False)
+    hashed_password: str = Field(min_length=60, max_length=500)
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: Optional[datetime] = Field(default=None, sa_column_kwargs={"onupdate": datetime.utcnow})
 

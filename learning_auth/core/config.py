@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     jwt_secret: str
     jwt_algorithm: str = "HS256"
 
-    access_token_expire_minutes: int = 15
+    access_token_expire_minutes: int = 20
     refresh_token_expire_days: int = 7
     
     argon2_memory_cost: int = 102400     # we tune these later

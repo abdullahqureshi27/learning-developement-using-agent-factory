@@ -72,20 +72,25 @@ def require_role(required_role: str):
         return current_user
     return role_checker
 
-# async def get_current_user_from_refresh_token(
-#     token: str = Depends(oauth2_scheme),   # we still use the same scheme
-#     db: Session = Depends(get_db),
-# ) -> User:
-#     """Used ONLY by the refresh endpoint."""
-#     try:
-#         payload = verify_token(token, token_type="refresh")
-#         user_id = int(payload.get("sub"))
-#         user = db.get(User, user_id)
-#         if not user or not user.is_active:
-#             raise HTTPException(status_code=401, detail="Invalid refresh token")
-#         return user
-#     except ValueError as e:
-#         raise HTTPException(status_code=401, detail=str(e))
+async def get_current_user_from_refresh_token(
+    token: str = Depends(oauth2_scheme),   # we still use the same scheme
+    db: Session = Depends(get_db),
+) -> User:
+    """Used ONLY by the refresh endpoint."""
+    try:
+        print("req hit to the get current user from refresh token with token:", token)  # Debugging line
+        payload = verify_token(token, token_type="refresh")
+        print("Decoded payload in get_current_user_from_refresh_token:", payload)  # Debugging line
+        user_id = payload.get("sub")
+        print("User ID extracted from payload:", user_id)  # Debugging line
+        user = db.get(User, user_id)
+        print("User fetched from DB in get_current_user_from_refresh_token:", user)  # Debugging line
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid refresh token")
+        print("User fetched from DB in get_current_user_from_refresh_token:", user)  # Debugging line
+        return user
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
 
 # async def get_current_user_from_cookie(

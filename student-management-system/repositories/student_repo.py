@@ -2,8 +2,7 @@ from typing import Literal, Optional
 
 from pydantic import EmailStr
 from sqlmodel import Session, select
-
-from models import student_model
+ 
 from models.student_model import Student, StudentCreate, StudentUpdate
 
 

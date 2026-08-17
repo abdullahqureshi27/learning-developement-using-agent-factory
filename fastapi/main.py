@@ -90,3 +90,24 @@ async def read_item(item_id: int):
             }
         )
     return {"item_id": item_id}
+
+
+
+
+# ============      
+# from fastapi import FastAPI,Request, Response
+# from routers.students_router  import router as users_router 
+# app = FastAPI(name="simple fastapi app")
+ 
+    
+# app.include_router(users_router)
+
+# @app.middleware("http")
+# async def middleware_func(req:Request, call_next) -> Response:
+
+#     print("the req in the middleware is :",req)
+#     return await call_next(req)
+
+# @app.get("/health")
+# def health():
+#     return "app is healthy"

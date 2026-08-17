@@ -5,7 +5,7 @@ from core.config import settings
 
 def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
     """Set httpOnly cookies for both tokens."""
-    
+    print("setting the cookies")
     # Access Token Cookie (short lived)
     response.set_cookie(
         key="access_token",

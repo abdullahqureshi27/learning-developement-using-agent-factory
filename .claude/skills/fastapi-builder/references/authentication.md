@@ -18,7 +18,7 @@ FastAPI's security system is built on OAuth2 with Password (and Bearer) flows. J
 ## Installation
 
 ```bash
-pip install "python-jose[cryptography]"  # JWT encoding/decoding
+pip install "pyjwt"                      # JWT encoding/decoding (import jwt)
 pip install "pwdlib[argon2]"             # Password hashing (Argon2)
 ```
 
@@ -64,7 +64,7 @@ def get_password_hash(password: str) -> str:
 ```python
 # app/core/security.py
 from datetime import datetime, timedelta, timezone
-from jose import JWTError, jwt
+import jwt
 from app.config import settings
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -82,7 +82,7 @@ def decode_access_token(token: str) -> dict | None:
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         return payload
-    except JWTError:
+    except jwt.PyJWTError:
         return None
 ```
 
@@ -283,6 +283,134 @@ async def update_user_me(
     session.refresh(current_user)
     return current_user
 ```
+
+---
+
+## Split-Auth Pattern: Frontend Issues JWTs, FastAPI Verifies
+
+When using a frontend auth framework (Next.js + Better Auth, Clerk, Auth0), FastAPI does not handle login. It only verifies incoming JWTs by fetching public keys from the auth provider's JWKS endpoint.
+
+### How It Works
+
+```
+Browser ──► Next.js + Better Auth (login, MFA, sessions, issues EdDSA JWTs)
+                │
+                │   Authorization: Bearer <JWT>
+                ▼
+            FastAPI (fetches JWKS, verifies signature, extracts claims)
+```
+
+- FastAPI **never sees passwords** — Better Auth handles all credential management
+- FastAPI **fetches the public key dynamically** from the JWKS URL — no shared secrets
+- FastAPI **trusts the claims** in the verified token (`sub`, `email`, `role`)
+
+### Installation
+
+```bash
+pip install "pyjwt"    # includes PyJWKClient for JWKS
+```
+
+### JWKS Verification
+
+```python
+# app/core/security.py
+import jwt
+from jwt import PyJWKClient
+from fastapi import Depends, HTTPException, status
+from typing import Annotated
+
+# Point to your auth provider's JWKS endpoint
+# Next.js + Better Auth default: http://localhost:3000/api/auth/jwks
+JWKS_URL = "http://localhost:3000/api/auth/jwks"
+jwks_client = PyJWKClient(JWKS_URL)
+
+async def verify_token(token: str = Depends(OAuth2PasswordBearer(tokenUrl=""))) -> dict:
+    """Verify a JWT issued by an external auth provider (Better Auth, Clerk, etc.)."""
+    try:
+        signing_key = jwks_client.get_signing_key_from_jwt(token)
+        payload = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=["EdDSA"],           # Better Auth default; adjust per provider
+            audience="http://localhost:3000",  # Must match the token's audience
+            options={"verify_exp": True},
+        )
+        return payload
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
+
+# Reusable dependency
+JWTDep = Annotated[dict, Depends(verify_token)]
+```
+
+### Usage in Endpoints
+
+```python
+from app.core.security import JWTDep
+
+@router.get("/me")
+async def read_user_me(payload: JWTDep):
+    """Return user info from the verified JWT claims."""
+    return {
+        "user_id": payload["sub"],
+        "email": payload.get("email"),
+        "role": payload.get("role"),
+    }
+
+@router.get("/admin/dashboard")
+async def admin_dashboard(payload: JWTDep):
+    """Admin-only endpoint — check role from token claims."""
+    if payload.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not enough privileges")
+    return {"dashboard": "sensitive data"}
+```
+
+### Sync User with Database (Optional)
+
+If you need a local users table synced with Better Auth:
+
+```python
+@router.get("/me")
+async def read_user_me(payload: JWTDep, session: SessionDep):
+    # Upsert user by the `sub` claim (Better Auth user ID)
+    user = session.exec(
+        select(User).where(User.external_id == payload["sub"])
+    ).first()
+    if not user:
+        user = User(
+            external_id=payload["sub"],
+            email=payload.get("email", ""),
+            role=payload.get("role", "student"),
+        )
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+    return user
+```
+
+### Provider-Specific Config
+
+| Provider | JWKS URL | Algorithm | Audience |
+|----------|----------|-----------|----------|
+| Better Auth (Next.js) | `http://localhost:3000/api/auth/jwks` | EdDSA | Your site URL |
+| Clerk | `https://[app].clerk.accounts.dev/.well-known/jwks.json` | RS256 | `[issuer]` |
+| Auth0 | `https://[tenant].auth0.com/.well-known/jwks.json` | RS256 | `[api-audience]` |
+
+---
+
+## Self-Contained vs Split-Auth: Decision Guide
+
+| Factor | Self-Contained | Split-Auth (JWKS) |
+|--------|---------------|-------------------|
+| **Who handles login** | FastAPI | Frontend / Auth provider |
+| **Password storage** | In your DB (hashed) | Never — handled by auth provider |
+| **MFA / social login** | You build it | Built into Better Auth, Clerk |
+| **Token signing** | Symmetric (HS256, shared secret) | Asymmetric (EdDSA/RS256, public key) |
+| **Statefulness** | Stateless (JWT) | Stateless (JWT) |
+| **Best for** | Simple APIs, mobile backends | Next.js apps, teams wanting auth-as-a-service |
 
 ---
 
@@ -695,6 +823,8 @@ def test_access_protected_without_token(client: TestClient):
     response = client.get("/users/me")
     assert response.status_code == 401
 ```
+
+For split-auth / JWKS verification (Better Auth, Clerk, Auth0), see the "Split-Auth Pattern" section above.
 
 See `references/testing.md` for complete test fixtures.
 

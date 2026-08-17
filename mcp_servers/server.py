@@ -58,4 +58,9 @@ from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP(name="hello_mcp",stateless_http=True)
 
+@mcp.tool()
+def search_online(query: str):
+    """Searches online for the given query."""
+    return f"Searching online for: {query}"
+
 mcp_app = mcp.streamable_http_app()
