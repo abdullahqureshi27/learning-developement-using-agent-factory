@@ -8,7 +8,7 @@ const TestPage = () => {
       const res = await api.get("/auth/me");
       console.log(res);
       alert(`Response: ${JSON.stringify(res.data)}`);
-    } catch (error) {
+    } catch (error: any) {
       alert(`Error: ${error.response?.data?.detail || error.message}`);
     }
   };

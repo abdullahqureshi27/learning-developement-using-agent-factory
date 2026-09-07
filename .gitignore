@@ -2,7 +2,16 @@
 # Never commit real secrets. Copy .env.example -> .env and fill in values.
 .env
 .env.*
+.env.local
+.env.*.local
+*.env
 !.env.example
+
+# ─── Databases & Local Stores ────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
 
 # ─── Python ──────────────────────────────────────────────────────────
 __pycache__/

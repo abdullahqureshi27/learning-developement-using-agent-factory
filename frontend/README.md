@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Agent Factory — Authentication & Client Dashboard
 
-## Getting Started
+> **Modern, responsive Next.js 15 client dashboard and session management portal for the Agent Factory ecosystem, built with React 19, TypeScript, and Better Auth.**
 
-First, run the development server:
+---
 
+> **Created & Maintained by [Abdullah Qureshi](https://abdullah-qureshi.vercel.app)**  
+> 🌐 **Portfolio**: [abdullah-qureshi.vercel.app](https://abdullah-qureshi.vercel.app) • 💼 **LinkedIn**: [abdullahqureshi27](https://www.linkedin.com/in/abdullahqureshi27) • 🐙 **GitHub**: [@abdullahqureshi27](https://github.com/abdullahqureshi27)
+
+---
+
+## 🌟 Key Highlights
+
+- **Next.js 15 App Router**: Server and client component routing with Turbopack for near-instant hot reloading.
+- **Better Auth Client Integration**: Secure session handling, token issuance, and protected route wrappers (`/dashboard`, `/login`, `/register`).
+- **Context-Driven State**: In-app `AuthContext` provider granting centralized access to user state, login credentials, and session lifecycles.
+- **Tailwind CSS & Responsive Layout**: Clean typographic layout using Vercel Geist fonts with full light/dark mode support.
+- **Permanent SEO Footer Attribution**: Direct attribution backlink to the author's portfolio.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+- **View Library**: [React 19](https://react.dev/)
+- **Language**: [TypeScript 5](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Authentication**: [Better Auth](https://www.better-auth.com/)
+
+---
+
+## 🚀 Getting Started
+
+### 1. Install Dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure Environment
+Create a `.env.local` file with the authentication base URL:
+```env
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=your_jwt_secret_key_here
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Run Development Server
+```bash
+npm run dev
+```
+Navigate to [http://localhost:3000](http://localhost:3000).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🧪 Build & Linting
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Typecheck and production bundle build
+npm run build
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Run ESLint
+npm run lint
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 👨‍💻 Author
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Abdullah Qureshi**  
+*Full-Stack & AI Systems Engineer*  
+- 🌐 [Portfolio](https://abdullah-qureshi.vercel.app) • 💼 [LinkedIn](https://www.linkedin.com/in/abdullahqureshi27) • 🐙 [GitHub](https://github.com/abdullahqureshi27)

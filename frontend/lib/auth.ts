@@ -7,8 +7,8 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: true,                    // Neon requires SSL
 });
-console.log("the database url is:", process.env.DATABASE_URL!.slice(0, 20) + "..."); // for debugging
-console.log("the better auth secret is:", process.env.BETTER_AUTH_SECRET!); // for debugging
+console.log("the database url is:", process.env.DATABASE_URL ? process.env.DATABASE_URL.slice(0, 20) + "..." : "not set"); // for debugging
+console.log("the better auth secret is:", process.env.BETTER_AUTH_SECRET || "not set"); // for debugging
 
 export const auth = betterAuth({
   // database: {

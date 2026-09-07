@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js Full-Stack Architecture Lab
 
-## Getting Started
+> **Hands-on experimental environment and deep-dive laboratory for Next.js App Router patterns, Server Components, Streaming, and API Routes.**
 
-First, run the development server:
+---
+
+> **Created & Maintained by [Abdullah Qureshi](https://abdullah-qureshi.vercel.app)**  
+> 🌐 **Portfolio**: [abdullah-qureshi.vercel.app](https://abdullah-qureshi.vercel.app) • 💼 **LinkedIn**: [abdullahqureshi27](https://www.linkedin.com/in/abdullahqureshi27) • 🐙 **GitHub**: [@abdullahqureshi27](https://github.com/abdullahqureshi27)
+
+---
+
+## 🌟 Overview & Objectives
+
+This workspace contains modular architectural patterns and experimental code for mastering modern Next.js features:
+- **Server Components (RSC) vs Client Components**: Boundary analysis, data hydration, and serialized props passing.
+- **Server Actions & Mutations**: Direct form submissions and optimistic updates without separate REST endpoints.
+- **Dynamic Routing & Layout Nesting**: Parallel routes, intercepted routes, and layout caching behavior.
+- **Route Handlers & Edge Execution**: Building low-latency backend microservices with Next.js edge functions.
+
+---
+
+## 🚀 Running Locally
 
 ```bash
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 👨‍💻 Author
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Abdullah Qureshi** — [Portfolio](https://abdullah-qureshi.vercel.app) • [GitHub](https://github.com/abdullahqureshi27)
